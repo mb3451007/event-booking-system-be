@@ -1,0 +1,106 @@
+
+const Item  = require('../model/item')
+const ItemSubitem   = require('../model/itemSubitem')
+const { v4: uuidv4 } = require('uuid');
+const addItem = async (req, res) => {
+  console.log(req.body, ':Body');
+  const { name, price, isAvailable, subItems  } = req.body;
+
+  if (!name || !price || !isAvailable || !subItems ) {
+    return res.status(400).json({ message: "Fill all required fields" });
+  }
+
+  try {
+    const newItem = new Item({ name, price, isAvailable });
+    // await newItem.save();
+    const savedItem = await newItem.save();
+
+    // Then, create records for each sub-item
+    const subItemRecords = subItems.map(subItemId => ({
+      item_id: savedItem._id,
+      subitem_id: subItemId
+    }));
+
+    // Save the sub-item records in the item_subitems collection
+    await ItemSubitem.insertMany(subItemRecords);
+    return res.status(201).json({ message: "Item added successfully" });
+  } catch (error) {
+    console.log("Error adding item:", error);
+    return res.status(500).json({ message: "Error adding item", error: error.message });
+  }
+};
+
+
+// get Pagnated items
+const getPaginatedItem = async (req, res) => {
+  const pageNumber = parseInt(req.params.pageNumber) || 1;
+  const pageSize = 5;
+
+  try {
+    const totalItems = await Item.countDocuments();
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const items = await Item.find()
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize);
+
+    res.status(200).json({ message: "Paginated items", items, totalPages });
+  } catch (error) {
+    res.status(500).json({ message: "Error getting paginated items", error });
+  }
+};
+
+
+// get All items
+
+const getAllItems = async (req, res) => {
+  try {
+    const items = await Item.find();
+    res.status(200).json({ message: "All items", items });
+  } catch (error) {
+    res.status(500).json({ message: "Error getting all items", error });
+  }
+};
+
+
+// Delete Items
+const deleteItem = async (req, res) => {
+  const itemId = req.params.itemId;
+
+  try {
+    const deletedItem = await Item.findByIdAndDelete(itemId);
+
+    if (deletedItem) {
+      res.status(200).json({ message: "Item deleted successfully", deletedItem });
+    } else {
+      res.status(404).json({ message: "Item not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting item", error });
+  }
+};
+
+
+// Update Items
+const updateitem = async (req, res) => {
+  const itemId = req.params.itemId;
+  const { name, price, isAvailable , subItemIds } = req.body;
+  console.log(itemId, price, isAvailable, subItemIds, 'update inputs')
+  try {
+    const updatedItem = await Item.findByIdAndUpdate(
+      itemId,
+      { name, price, isAvailable , subItemIds },
+      { new: true } 
+    );
+
+    if (updatedItem) {
+     return res.status(200).json({ message: "Item updated successfully", updatedItem });
+    } else {
+     return  res.status(404).json({ message: "Item not found" });
+    }
+  } catch (error) {
+    console.log(error)
+     return res.status(500).json({ message: "Error updating item", error });
+  }
+};
+
+module.exports = { addItem, getPaginatedItem, deleteItem, updateitem ,getAllItems};

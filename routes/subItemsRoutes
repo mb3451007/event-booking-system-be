@@ -1,0 +1,11 @@
+const express = require('express');
+const Router =  express.Router();
+const {addSubItem, getPaginatedSubItem,deleteSubItem,updateSubitem,getAllSubItems} = require('../controllers/subItem-controller')
+
+
+Router.post('/add-Subitem', addSubItem)
+Router.get('/get-Subitems/:pageNumber', getPaginatedSubItem)
+Router.get('/get-Subitems', getAllSubItems)
+Router.delete('/delete-Subitem/:SubitemId', deleteSubItem)
+Router.patch('/update-Subitem/:SubitemId', updateSubitem)
+module.exports = Router

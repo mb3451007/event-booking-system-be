@@ -1,0 +1,15 @@
+const mongoose = require('mongoose');
+
+const itemSubitemSchema = new mongoose.Schema({
+  item_id: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Item', 
+    required: true 
+  },
+  subitem_id: { 
+    type: String, 
+    required: true 
+  }
+});
+
+module.exports = mongoose.model('ItemSubitem', itemSubitemSchema);
