@@ -37,11 +37,33 @@ const getPaginatedItem = async (req, res) => {
   const pageSize = 5;
 
   try {
+    const items = await Item.aggregate([
+      {
+        $lookup: {
+          from: 'itemsubitems',  // The collection name (ensure it's correct in your MongoDB)
+          localField: '_id',      // Field from the Item collection
+          foreignField: 'item_id', // Field from the ItemSubitem collection
+          as: 'subItems'          // Name of the field to add the sub-items array
+        }
+      },
+      {
+        $skip: (pageNumber - 1) * pageSize
+      },
+      {
+        $limit: pageSize
+      },
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          isAvailable: 1,
+          subItems: '$subItems.subitem_id' // Only include the subitem_id field in subItems
+        }
+      }
+    ]);
+
     const totalItems = await Item.countDocuments();
     const totalPages = Math.ceil(totalItems / pageSize);
-    const items = await Item.find()
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
 
     res.status(200).json({ message: "Paginated items", items, totalPages });
   } catch (error) {
@@ -50,16 +72,36 @@ const getPaginatedItem = async (req, res) => {
 };
 
 
+
 // get All items
 
 const getAllItems = async (req, res) => {
   try {
-    const items = await Item.find();
+    const items = await Item.aggregate([
+      {
+        $lookup: {
+          from: 'itemsubitems', // Ensure this matches your MongoDB collection name
+          localField: '_id',
+          foreignField: 'item_id',
+          as: 'subItems'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          isAvailable: 1,
+          subItems: '$subItems.subitem_id' // Correct field syntax
+        }
+      }
+    ]);
+
     res.status(200).json({ message: "All items", items });
   } catch (error) {
     res.status(500).json({ message: "Error getting all items", error });
   }
 };
+
 
 
 // Delete Items
