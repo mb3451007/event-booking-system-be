@@ -1,0 +1,27 @@
+const loginSchema = require('../model/authModel')
+const {generateToken} = require('../auth/jwt')
+const login = async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        // Find user by username
+        const user = await loginSchema.findOne({ username: username });
+
+        if (user) {
+            // Compare the stored password with the provided password
+            if (user.password === password) {
+                const token = generateToken(user)
+                return res.status(200).json({ message: 'Login successfully' ,user:user ,token:token });
+            } else {
+                return res.status(401).json({ message: 'Password not matched' });
+            }
+        } else {
+            return res.status(400).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+module.exports = { login };

@@ -34,7 +34,7 @@ const addItem = async (req, res) => {
 // get Pagnated items
 const getPaginatedItem = async (req, res) => {
   const pageNumber = parseInt(req.params.pageNumber) || 1;
-  const pageSize = 5;
+  const pageSize = 10;
 
   try {
     const items = await Item.aggregate([
