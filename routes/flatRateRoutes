@@ -1,0 +1,10 @@
+const express = require('express')
+const {getFlatRate , updateFlatRate}=require('../controllers/flatRateController')
+
+const Router=express.Router()
+
+Router.get('/getKey',getFlatRate)
+Router.patch('/updateKey/:flatRateId',updateFlatRate)
+
+
+module.exports=Router
