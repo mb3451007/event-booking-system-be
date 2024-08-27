@@ -5,10 +5,10 @@ const http = require('http');
 const items = require('./routes/itemsRoutes');
 const subItems = require('./routes/subItemsRoutes');
 const auth = require('./routes/authRoutes');
-const flatRate = require('./routes/flatRateRoutes');
+const flatRate = require('./routes/settingRoutes');
 const mongoose = require('mongoose');
 const loginSchema = require('./model/authModel');
-const flatRateSchema = require('./model/FlatRateModel');
+const flatRateSchema = require('./model/settingsModel');
 
 // Create an HTTP server
 const server = http.createServer(app);

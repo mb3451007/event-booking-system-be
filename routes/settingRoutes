@@ -1,5 +1,5 @@
 const express = require('express')
-const {getFlatRate , updateFlatRate}=require('../controllers/flatRateController')
+const {getFlatRate , updateFlatRate}=require('../controllers/settingsController')
 
 const Router=express.Router()
 
