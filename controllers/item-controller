@@ -4,14 +4,14 @@ const ItemSubitem   = require('../model/itemSubitem')
 const { v4: uuidv4 } = require('uuid');
 const addItem = async (req, res) => {
   console.log(req.body, ':Body');
-  const { name, price, isAvailable, subItems  } = req.body;
+  const { name, isAvailable, subItems  } = req.body;
 
-  if (!name || !price || !isAvailable || !subItems ) {
+  if (!name  || !isAvailable || !subItems ) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new Item({ name, price, isAvailable });
+    const newItem = new Item({ name, isAvailable });
     // await newItem.save();
     const savedItem = await newItem.save();
 
@@ -55,7 +55,6 @@ const getPaginatedItem = async (req, res) => {
       {
         $project: {
           name: 1,
-          price: 1,
           isAvailable: 1,
           subItems: '$subItems.subitem_id' // Only include the subitem_id field in subItems
         }
@@ -89,7 +88,6 @@ const getAllItems = async (req, res) => {
       {
         $project: {
           name: 1,
-          price: 1,
           isAvailable: 1,
           subItems: '$subItems.subitem_id' // Correct field syntax
         }
@@ -125,12 +123,12 @@ const deleteItem = async (req, res) => {
 // Update Items
 const updateitem = async (req, res) => {
   const itemId = req.params.itemId;
-  const { name, price, isAvailable , subItemIds } = req.body;
-  console.log(itemId, price, isAvailable, subItemIds, 'update inputs')
+  const { name, isAvailable , subItemIds } = req.body;
+  console.log(itemId, isAvailable, subItemIds, 'update inputs')
   try {
     const updatedItem = await Item.findByIdAndUpdate(
       itemId,
-      { name, price, isAvailable , subItemIds },
+      { name, isAvailable , subItemIds },
       { new: true } 
     );
 
