@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const http = require('http');
 const items = require('./routes/itemsRoutes');
+const peckage = require('./routes/packageRoutes');
 const subItems = require('./routes/subItemsRoutes');
 const auth = require('./routes/authRoutes');
 const flatRate = require('./routes/settingRoutes');
@@ -64,6 +65,7 @@ app.use(express.json());
 app.use(cors());
 app.use('/item', items);
 app.use('/subItem', subItems);
+app.use('/package', peckage);
 app.use('/', auth);
 app.use('/flatrate', flatRate);
 

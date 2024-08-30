@@ -1,8 +1,10 @@
 
-const Item  = require('../model/item')
+const packageSchema  = require('../model/packageModel')
 const ItemSubitem   = require('../model/itemSubitem')
 const { v4: uuidv4 } = require('uuid');
-const addItem = async (req, res) => {
+
+
+const addPackage = async (req, res) => {
   console.log(req.body, ':Body');
   const { name, isAvailable, subItems  } = req.body;
 
@@ -11,7 +13,7 @@ const addItem = async (req, res) => {
   }
 
   try {
-    const newItem = new Item({ name, isAvailable });
+    const newItem = new packageSchema({ name, isAvailable });
     // await newItem.save();
     const savedItem = await newItem.save();
 
@@ -32,12 +34,12 @@ const addItem = async (req, res) => {
 
 
 // get Pagnated items
-const getPaginatedItem = async (req, res) => {
+const getPaginatedPackage = async (req, res) => {
   const pageNumber = parseInt(req.params.pageNumber) || 1;
   const pageSize = 10;
 
   try {
-    const items = await Item.aggregate([
+    const items = await packageSchema.aggregate([
       {
         $lookup: {
           from: 'itemsubitems',  // The collection name (ensure it's correct in your MongoDB)
@@ -61,7 +63,7 @@ const getPaginatedItem = async (req, res) => {
       }
     ]);
 
-    const totalItems = await Item.countDocuments();
+    const totalItems = await packageSchema.countDocuments();
     const totalPages = Math.ceil(totalItems / pageSize);
 
     res.status(200).json({ message: "Paginated items", items, totalPages });
@@ -74,9 +76,9 @@ const getPaginatedItem = async (req, res) => {
 
 // get All items
 
-const getAllItems = async (req, res) => {
+const getAllPackage = async (req, res) => {
   try {
-    const items = await Item.aggregate([
+    const items = await packageSchema.aggregate([
       {
         $lookup: {
           from: 'itemsubitems', // Ensure this matches your MongoDB collection name
@@ -103,11 +105,11 @@ const getAllItems = async (req, res) => {
 
 
 // Delete Items
-const deleteItem = async (req, res) => {
-  const itemId = req.params.itemId;
+const deletePackage = async (req, res) => {
+  const packageId = req.params.packageId;
 
   try {
-    const deletedItem = await Item.findByIdAndDelete(itemId);
+    const deletedItem = await packageSchema.findByIdAndDelete(packageId);
 
     if (deletedItem) {
       res.status(200).json({ message: "Item deleted successfully", deletedItem });
@@ -121,13 +123,13 @@ const deleteItem = async (req, res) => {
 
 
 // Update Items
-const updateitem = async (req, res) => {
-  const itemId = req.params.itemId;
+const updatePackage = async (req, res) => {
+  const packageId = req.params.packageId;
   const { name, isAvailable , subItemIds } = req.body;
-  console.log(itemId, isAvailable, subItemIds, 'update inputs')
+  console.log(packageId, isAvailable, subItemIds, 'update inputs')
   try {
-    const updatedItem = await Item.findByIdAndUpdate(
-      itemId,
+    const updatedItem = await packageSchema.findByIdAndUpdate(
+      packageId,
       { name, isAvailable , subItemIds },
       { new: true } 
     );
@@ -143,4 +145,4 @@ const updateitem = async (req, res) => {
   }
 };
 
-module.exports = { addItem, getPaginatedItem, deleteItem, updateitem ,getAllItems};
+module.exports = { addPackage, getPaginatedPackage, deletePackage, updatePackage ,getAllPackage};

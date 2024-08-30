@@ -3,7 +3,7 @@ const subItem = require('../model/subItem')
 //  addSubItem
 const addSubItem = async (req, res) => {
   const { name, price, isAvailable } = req.body;
-  if (!name || !price || !isAvailable) {
+  if (!name || !price ) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
