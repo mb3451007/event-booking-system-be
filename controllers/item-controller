@@ -2,33 +2,44 @@
 const Item  = require('../model/item')
 const ItemSubitem   = require('../model/itemSubitem')
 const { v4: uuidv4 } = require('uuid');
+
+
 const addItem = async (req, res) => {
   console.log(req.body, ':Body');
-  const { name, isAvailable, subItems  } = req.body;
+  const { name, isAvailable, subItems, packages } = req.body;
+  console.log(name, isAvailable, subItems, packages, '................add item');
 
-  if (!name || !subItems ) {
+  if (!name || !subItems || !packages || subItems.length === 0 || packages.length === 0) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
     const newItem = new Item({ name, isAvailable });
-    // await newItem.save();
     const savedItem = await newItem.save();
 
-    // Then, create records for each sub-item
+    // Create records for each sub-item
     const subItemRecords = subItems.map(subItemId => ({
       item_id: savedItem._id,
-      subitem_id: subItemId
+      subitem_id: subItemId,
     }));
 
-    // Save the sub-item records in the item_subitems collection
-    await ItemSubitem.insertMany(subItemRecords);
+    // Create records for each package
+    const packageRecords = packages.map(packageId => ({
+      item_id: savedItem._id,
+      package_id: packageId
+    }));
+
+    // Save the sub-item and package records
+    await ItemSubitem.insertMany([...subItemRecords, ...packageRecords]);
+
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
     console.log("Error adding item:", error);
     return res.status(500).json({ message: "Error adding item", error: error.message });
   }
 };
+
+
 
 
 // get Pagnated items
@@ -40,10 +51,18 @@ const getPaginatedItem = async (req, res) => {
     const items = await Item.aggregate([
       {
         $lookup: {
-          from: 'itemsubitems',  // The collection name (ensure it's correct in your MongoDB)
-          localField: '_id',      // Field from the Item collection
-          foreignField: 'item_id', // Field from the ItemSubitem collection
-          as: 'subItems'          // Name of the field to add the sub-items array
+          from: 'itemsubitems',  // The collection name for sub-items
+          localField: '_id',
+          foreignField: 'item_id',
+          as: 'subItems'
+        }
+      },
+      {
+        $lookup: {
+          from: 'itemsubitems',  // The collection name for packages
+          localField: '_id',
+          foreignField: 'item_id',
+          as: 'packages'
         }
       },
       {
@@ -56,7 +75,8 @@ const getPaginatedItem = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
-          subItems: '$subItems.subitem_id' // Only include the subitem_id field in subItems
+          subItems: '$subItems.subitem_id',
+          packages: '$packages.package_id'
         }
       }
     ]);
@@ -72,6 +92,7 @@ const getPaginatedItem = async (req, res) => {
 
 
 
+
 // get All items
 
 const getAllItems = async (req, res) => {
@@ -79,17 +100,26 @@ const getAllItems = async (req, res) => {
     const items = await Item.aggregate([
       {
         $lookup: {
-          from: 'itemsubitems', // Ensure this matches your MongoDB collection name
+          from: 'itemsubitems', // The collection name for sub-items
           localField: '_id',
           foreignField: 'item_id',
           as: 'subItems'
         }
       },
       {
+        $lookup: {
+          from: 'itemsubitems', // The collection name for packages
+          localField: '_id',
+          foreignField: 'item_id',
+          as: 'packages'
+        }
+      },
+      {
         $project: {
           name: 1,
           isAvailable: 1,
-          subItems: '$subItems.subitem_id' // Correct field syntax
+          subItems: '$subItems.subitem_id',
+          packages: '$packages.package_id'
         }
       }
     ]);
@@ -99,6 +129,7 @@ const getAllItems = async (req, res) => {
     res.status(500).json({ message: "Error getting all items", error });
   }
 };
+
 
 
 
@@ -123,23 +154,41 @@ const deleteItem = async (req, res) => {
 // Update Items
 const updateitem = async (req, res) => {
   const itemId = req.params.itemId;
-  const { name, isAvailable , subItemIds } = req.body;
-  console.log(itemId, isAvailable, subItemIds, 'update inputs')
+  const { name, isAvailable, subItems, packages } = req.body;
+
   try {
+    // Update the item in the Item collection
     const updatedItem = await Item.findByIdAndUpdate(
       itemId,
-      { name, isAvailable , subItemIds },
-      { new: true } 
+      { name, isAvailable },
+      { new: true }
     );
 
-    if (updatedItem) {
-     return res.status(200).json({ message: "Item updated successfully", updatedItem });
-    } else {
-     return  res.status(404).json({ message: "Item not found" });
+    if (!updatedItem) {
+      return res.status(404).json({ message: "Item not found" });
     }
+
+    // Remove the old subItem and package associations
+    await ItemSubitem.deleteMany({ item_id: itemId });
+
+    // Create new subItem and package associations
+    const subItemRecords = subItems.map(subItemId => ({
+      item_id: itemId,
+      subitem_id: subItemId,
+    }));
+
+    const packageRecords = packages.map(packageId => ({
+      item_id: itemId,
+      package_id: packageId,
+    }));
+
+    // Save the new associations
+    await ItemSubitem.insertMany([...subItemRecords, ...packageRecords]);
+
+    return res.status(200).json({ message: "Item updated successfully", updatedItem });
   } catch (error) {
-    console.log(error)
-     return res.status(500).json({ message: "Error updating item", error });
+    console.log("Error updating item:", error);
+    return res.status(500).json({ message: "Error updating item", error });
   }
 };
 

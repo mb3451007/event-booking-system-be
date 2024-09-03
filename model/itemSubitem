@@ -7,8 +7,14 @@ const itemSubitemSchema = new mongoose.Schema({
     required: true 
   },
   subitem_id: { 
-    type: String, 
-    required: true 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'SubItem', 
+    required: false 
+  },
+  package_id: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Package', 
+    required: false 
   }
 });
 

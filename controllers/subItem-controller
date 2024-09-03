@@ -21,7 +21,7 @@ const addSubItem = async (req, res) => {
 // get Pagnated Subitems
 const getPaginatedSubItem = async (req, res) => {
   const pageNumber = parseInt(req.params.pageNumber) || 1;
-  const pageSize = 5;
+  const pageSize = 10;
 
   try {
     const totalItems = await subItem.countDocuments();
