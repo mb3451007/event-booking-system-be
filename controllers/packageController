@@ -1,36 +1,29 @@
 
 const packageSchema  = require('../model/packageModel')
 const ItemSubitem   = require('../model/itemSubitem')
+const Item = require('../model/item');
 const { v4: uuidv4 } = require('uuid');
 
 
 const addPackage = async (req, res) => {
   console.log(req.body, ':Body');
-  const { name, isAvailable, subItems  } = req.body;
+  const { name } = req.body
 
-  if (!name || !subItems ) {
+  if (!name ) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new packageSchema({ name, isAvailable });
-    // await newItem.save();
-    const savedItem = await newItem.save();
-
-    // Then, create records for each sub-item
-    const subItemRecords = subItems.map(subItemId => ({
-      item_id: savedItem._id,
-      subitem_id: subItemId
-    }));
-
-    // Save the sub-item records in the item_subitems collection
-    await ItemSubitem.insertMany(subItemRecords);
-    return res.status(201).json({ message: "Item added successfully" });
-  } catch (error) {
-    console.log("Error adding item:", error);
-    return res.status(500).json({ message: "Error adding item", error: error.message });
+    const newItem = new packageSchema({ name });
+    await newItem.save();
+    return res.status(200).json({message:"package added succsessfully",newItem});
   }
-};
+  catch (error) {
+    return res.status(500).json({ message: "Error adding package", error });
+  }
+
+}
+
 
 
 // get Pagnated items
@@ -39,34 +32,23 @@ const getPaginatedPackage = async (req, res) => {
   const pageSize = 10;
 
   try {
-    const items = await packageSchema.aggregate([
-      {
-        $lookup: {
-          from: 'itemsubitems',  // The collection name (ensure it's correct in your MongoDB)
-          localField: '_id',      // Field from the Item collection
-          foreignField: 'item_id', // Field from the ItemSubitem collection
-          as: 'subItems'          // Name of the field to add the sub-items array
-        }
-      },
-      {
-        $skip: (pageNumber - 1) * pageSize
-      },
-      {
-        $limit: pageSize
-      },
-      {
-        $project: {
-          name: 1,
-          isAvailable: 1,
-          subItems: '$subItems.subitem_id' // Only include the subitem_id field in subItems
-        }
-      }
-    ]);
+    // Calculate the number of documents to skip
+    const skip = (pageNumber - 1) * pageSize;
 
+    // Get the paginated items from the database
+    const items = await packageSchema
+      .find()
+      .skip(skip)
+      .limit(pageSize);
+
+    // Get the total number of items in the collection
     const totalItems = await packageSchema.countDocuments();
+
+    // Calculate the total number of pages
     const totalPages = Math.ceil(totalItems / pageSize);
 
-    res.status(200).json({ message: "Paginated items", items, totalPages });
+    // Send the paginated items, total pages, and total items count as a response
+    res.status(200).json({ message: "Paginated items", items, totalPages, totalItems });
   } catch (error) {
     res.status(500).json({ message: "Error getting paginated items", error });
   }
@@ -74,28 +56,12 @@ const getPaginatedPackage = async (req, res) => {
 
 
 
+
 // get All items
 
 const getAllPackage = async (req, res) => {
   try {
-    const items = await packageSchema.aggregate([
-      {
-        $lookup: {
-          from: 'itemsubitems', // Ensure this matches your MongoDB collection name
-          localField: '_id',
-          foreignField: 'item_id',
-          as: 'subItems'
-        }
-      },
-      {
-        $project: {
-          name: 1,
-          isAvailable: 1,
-          subItems: '$subItems.subitem_id' // Correct field syntax
-        }
-      }
-    ]);
-
+    const items = await packageSchema.find()
     res.status(200).json({ message: "All items", items });
   } catch (error) {
     res.status(500).json({ message: "Error getting all items", error });
@@ -125,12 +91,11 @@ const deletePackage = async (req, res) => {
 // Update Items
 const updatePackage = async (req, res) => {
   const packageId = req.params.packageId;
-  const { name, isAvailable , subItemIds } = req.body;
-  console.log(packageId, isAvailable, subItemIds, 'update inputs')
+  const  name  = req.body;
+  console.log(packageId, 'update inputs')
   try {
     const updatedItem = await packageSchema.findByIdAndUpdate(
-      packageId,
-      { name, isAvailable , subItemIds },
+      packageId,{ name },
       { new: true } 
     );
 
@@ -145,4 +110,46 @@ const updatePackage = async (req, res) => {
   }
 };
 
-module.exports = { addPackage, getPaginatedPackage, deletePackage, updatePackage ,getAllPackage};
+
+// Get Package by Id including associated Item and Subitems
+const getPackageById = async (req, res) => {
+  const packageId = req.params.packageId;
+
+  try {
+    // Fetch the package using the packageId
+    const packageData = await packageSchema.findById(packageId);
+
+    if (!packageData) {
+      return res.status(404).json({ message: 'Package not found' });
+    }
+
+    // Fetch all sub-items related to the package
+    const subItems = await ItemSubitem.find({ package_id: packageId });
+
+    // Extract item_id from one of the subItems (assuming they all share the same item_id)
+    const itemId = subItems.length > 0 ? subItems[0].item_id : null;
+
+    // Fetch the associated item using the item_id
+    let itemData = null;
+    if (itemId) {
+      itemData = await Item.findById(itemId);
+    }
+
+    // Combine package data with its associated item and sub-items
+    const packageWithItemAndSubItems = {
+      package: packageData,
+      item: itemData,
+      subItems: subItems
+    };
+
+    // Return the combined data
+    return res.status(200).json({ message: 'Package retrieved successfully', data: packageWithItemAndSubItems });
+
+  } catch (error) {
+    return res.status(500).json({ message: 'Error retrieving package', error });
+  }
+};
+
+module.exports = { addPackage, getPaginatedPackage, deletePackage, updatePackage, getAllPackage, getPackageById };
+
+

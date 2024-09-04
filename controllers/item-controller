@@ -54,15 +54,15 @@ const getPaginatedItem = async (req, res) => {
           from: 'itemsubitems',  // The collection name for sub-items
           localField: '_id',
           foreignField: 'item_id',
-          as: 'subItems'
+          as: 'subItemsAndPackages'
         }
       },
       {
         $lookup: {
-          from: 'itemsubitems',  // The collection name for packages
-          localField: '_id',
-          foreignField: 'item_id',
-          as: 'packages'
+          from: 'packages',  // The collection name for packages
+          localField: 'subItemsAndPackages.package_id',
+          foreignField: '_id',
+          as: 'packageDetails'
         }
       },
       {
@@ -75,8 +75,18 @@ const getPaginatedItem = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
-          subItems: '$subItems.subitem_id',
-          packages: '$packages.package_id'
+          subItems: '$subItemsAndPackages.subitem_id',
+          packages: {
+            $map :{
+              input : '$packageDetails',
+              as :'package',
+              in :{
+                id : '$$package._id',
+                name : '$$package.name',
+                price : '$$package.price',
+              }
+            }
+          }
         }
       }
     ]);
@@ -100,26 +110,36 @@ const getAllItems = async (req, res) => {
     const items = await Item.aggregate([
       {
         $lookup: {
-          from: 'itemsubitems', // The collection name for sub-items
+          from: 'itemsubitems',
           localField: '_id',
           foreignField: 'item_id',
-          as: 'subItems'
+          as: 'subItemsAndPackages'
         }
       },
       {
         $lookup: {
-          from: 'itemsubitems', // The collection name for packages
-          localField: '_id',
-          foreignField: 'item_id',
-          as: 'packages'
+          from: 'packages',
+          localField: 'subItemsAndPackages.package_id',
+          foreignField: '_id',
+          as: 'packageDetails'
         }
       },
       {
         $project: {
           name: 1,
           isAvailable: 1,
-          subItems: '$subItems.subitem_id',
-          packages: '$packages.package_id'
+          subItems: '$subItemsAndPackages.subitem_id',
+          packages: {
+            $map: {
+              input: '$packageDetails',
+              as: 'package',
+              in: {
+                id: '$$package._id',
+                name: '$$package.name',
+                price: '$$package.price'
+              }
+            }
+          }
         }
       }
     ]);
@@ -129,6 +149,7 @@ const getAllItems = async (req, res) => {
     res.status(500).json({ message: "Error getting all items", error });
   }
 };
+
 
 
 
