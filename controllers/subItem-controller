@@ -1,14 +1,17 @@
 
 const subItem = require('../model/subItem')
+const item = require('../model/item')
+
 //  addSubItem
 const addSubItem = async (req, res) => {
-  const { name, price, isAvailable } = req.body;
-  if (!name || !price ) {
+  const { name, price, isAvailable ,items} = req.body;
+  console.log(req.body,'body//////');
+  if (!name || !price || !items) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new subItem({ name, price, isAvailable });
+    const newItem = new subItem({ name, price, isAvailable,items });
     await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
@@ -19,20 +22,47 @@ const addSubItem = async (req, res) => {
 
 
 // get Pagnated Subitems
+
 const getPaginatedSubItem = async (req, res) => {
   const pageNumber = parseInt(req.params.pageNumber) || 1;
   const pageSize = 10;
-
+console.log(pageNumber, pageSize,'nhiuhyi')
   try {
+    const subItems = await subItem.aggregate([
+      {
+        $lookup: {
+          from: 'items',  
+          localField: 'items',  
+          foreignField: '_id',  
+          as: 'itemDetails'
+        }
+      },
+      {
+        $skip: (pageNumber - 1) * pageSize
+      },
+      {
+        $limit: pageSize
+      },
+      {
+        $project: {
+          name: 1,
+          isAvailable: 1,
+          price: 1,  
+          item: {
+            id: { $arrayElemAt: ['$itemDetails._id', 0] },  
+            name: { $arrayElemAt: ['$itemDetails.name', 0] }  
+          }
+        }
+      }
+    ]);
+
     const totalItems = await subItem.countDocuments();
     const totalPages = Math.ceil(totalItems / pageSize);
-    const items = await subItem.find()
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
 
-    res.status(200).json({ message: "Paginated items", items, totalPages });
+    res.status(200).json({ message: "Paginated items", subItems, totalPages });
   } catch (error) {
-    res.status(500).json({ message: "Error getting paginated items", error });
+    console.error("Error getting paginated items:", error);
+    res.status(500).json({ message: "Error getting paginated items", error: error.message });
   }
 };
 
@@ -69,12 +99,12 @@ const deleteSubItem = async (req, res) => {
 // Update SubItems
 const updateSubitem = async (req, res) => {
   const SubitemId = req.params.SubitemId;
-  const { name, price, isAvailable } = req.body;
+  const { name, price, isAvailable,item } = req.body;
 
   try {
     const updatedItem = await subItem.findByIdAndUpdate(
       SubitemId,
-      { name, price, isAvailable },
+      { name, price, isAvailable ,item},
       { new: true } 
     );
 

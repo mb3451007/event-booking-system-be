@@ -2,11 +2,11 @@
 const packageSchema  = require('../model/packageModel')
 const ItemSubitem   = require('../model/itemSubitem')
 const Item = require('../model/item');
+const Subitem = require('../model/subItem');
 const { v4: uuidv4 } = require('uuid');
 
 
 const addPackage = async (req, res) => {
-  console.log(req.body, ':Body');
   const { name } = req.body
 
   if (!name ) {
@@ -26,28 +26,23 @@ const addPackage = async (req, res) => {
 
 
 
-// get Pagnated items
+
 const getPaginatedPackage = async (req, res) => {
   const pageNumber = parseInt(req.params.pageNumber) || 1;
   const pageSize = 10;
 
   try {
-    // Calculate the number of documents to skip
+   
     const skip = (pageNumber - 1) * pageSize;
 
-    // Get the paginated items from the database
-    const items = await packageSchema
-      .find()
-      .skip(skip)
-      .limit(pageSize);
-
-    // Get the total number of items in the collection
+  
+    const items = await packageSchema.find().skip(skip).limit(pageSize);
+    console.log(items,'these are items in paginated packages')
     const totalItems = await packageSchema.countDocuments();
 
-    // Calculate the total number of pages
+ 
     const totalPages = Math.ceil(totalItems / pageSize);
 
-    // Send the paginated items, total pages, and total items count as a response
     res.status(200).json({ message: "Paginated items", items, totalPages, totalItems });
   } catch (error) {
     res.status(500).json({ message: "Error getting paginated items", error });
@@ -91,8 +86,7 @@ const deletePackage = async (req, res) => {
 // Update Items
 const updatePackage = async (req, res) => {
   const packageId = req.params.packageId;
-  const  name  = req.body;
-  console.log(packageId, 'update inputs')
+  const  {name}  = req.body;
   try {
     const updatedItem = await packageSchema.findByIdAndUpdate(
       packageId,{ name },
@@ -105,44 +99,57 @@ const updatePackage = async (req, res) => {
      return  res.status(404).json({ message: "Item not found" });
     }
   } catch (error) {
-    console.log(error)
      return res.status(500).json({ message: "Error updating item", error });
   }
 };
 
 
 // Get Package by Id including associated Item and Subitems
+
 const getPackageById = async (req, res) => {
   const packageId = req.params.packageId;
 
   try {
-    // Fetch the package using the packageId
+   
     const packageData = await packageSchema.findById(packageId);
 
     if (!packageData) {
       return res.status(404).json({ message: 'Package not found' });
     }
 
-    // Fetch all sub-items related to the package
-    const subItems = await ItemSubitem.find({ package_id: packageId });
+console.log(packageData,'package Data')
 
-    // Extract item_id from one of the subItems (assuming they all share the same item_id)
-    const itemId = subItems.length > 0 ? subItems[0].item_id : null;
+    const itemsData = await Item.find({ packages:packageId });
 
-    // Fetch the associated item using the item_id
-    let itemData = null;
-    if (itemId) {
-      itemData = await Item.findById(itemId);
+    console.log(itemsData, 'items Data')
+    if (itemsData.length === 0) {
+      return res.status(404).json({ message: 'Items not found for this package' });
     }
 
-    // Combine package data with its associated item and sub-items
+    
+    const itemId = itemsData.map(item=>item._id)
+console.log(itemId,'hhhhhhh')
+   
+    const subItemsData = await Subitem.find({ items:{$in: itemId}  });
+
+    console.log(subItemsData,'subItemData')
+    const itemsWithSubItems = itemsData.map(item => {
+   
+   const relatedSubItems = subItemsData.filter(sub => sub.items.equals(item._id));
+
+      return {
+        item,
+        subItems: relatedSubItems
+      };
+    });
+
+  
     const packageWithItemAndSubItems = {
       package: packageData,
-      item: itemData,
-      subItems: subItems
+      itemsWithSubItems
     };
+    console.log(packageWithItemAndSubItems,'lllllll')
 
-    // Return the combined data
     return res.status(200).json({ message: 'Package retrieved successfully', data: packageWithItemAndSubItems });
 
   } catch (error) {

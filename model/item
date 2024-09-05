@@ -3,15 +3,9 @@ const mongoose = require('mongoose');
 const itemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   isAvailable: { type: Boolean, },
+  packages:mongoose.Schema.Types.ObjectId
 });
 
  module.exports= mongoose.model('Item', itemSchema);
 
-// const itemSubItemSchema = new mongoose.Schema({
-//     item_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Item', required: true },
-//     subitem_id: { type: mongoose.Schema.Types.ObjectId, ref: 'SubItem', required: true },
-//   });
-  
-//   const ItemSubItem = mongoose.model('ItemSubItem', itemSubItemSchema)
 
- 

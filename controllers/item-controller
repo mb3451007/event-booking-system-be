@@ -1,37 +1,20 @@
 
 const Item  = require('../model/item')
 const ItemSubitem   = require('../model/itemSubitem')
+const packages = require('../model/packageModel')
 const { v4: uuidv4 } = require('uuid');
 
 
 const addItem = async (req, res) => {
-  console.log(req.body, ':Body');
-  const { name, isAvailable, subItems, packages } = req.body;
-  console.log(name, isAvailable, subItems, packages, '................add item');
-
-  if (!name || !subItems || !packages || subItems.length === 0 || packages.length === 0) {
+  const { name, isAvailable, packages } = req.body;
+console.log(req.body);
+  if (!name  || !packages || packages.length === 0) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new Item({ name, isAvailable });
-    const savedItem = await newItem.save();
-
-    // Create records for each sub-item
-    const subItemRecords = subItems.map(subItemId => ({
-      item_id: savedItem._id,
-      subitem_id: subItemId,
-    }));
-
-    // Create records for each package
-    const packageRecords = packages.map(packageId => ({
-      item_id: savedItem._id,
-      package_id: packageId
-    }));
-
-    // Save the sub-item and package records
-    await ItemSubitem.insertMany([...subItemRecords, ...packageRecords]);
-
+    const newItem = new Item({ name, isAvailable ,packages });
+     await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
     console.log("Error adding item:", error);
@@ -51,16 +34,8 @@ const getPaginatedItem = async (req, res) => {
     const items = await Item.aggregate([
       {
         $lookup: {
-          from: 'itemsubitems',  // The collection name for sub-items
-          localField: '_id',
-          foreignField: 'item_id',
-          as: 'subItemsAndPackages'
-        }
-      },
-      {
-        $lookup: {
-          from: 'packages',  // The collection name for packages
-          localField: 'subItemsAndPackages.package_id',
+          from: 'packages',  // Ensure this matches the actual collection name in MongoDB
+          localField: 'packages',
           foreignField: '_id',
           as: 'packageDetails'
         }
@@ -75,17 +50,9 @@ const getPaginatedItem = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
-          subItems: '$subItemsAndPackages.subitem_id',
-          packages: {
-            $map :{
-              input : '$packageDetails',
-              as :'package',
-              in :{
-                id : '$$package._id',
-                name : '$$package.name',
-                price : '$$package.price',
-              }
-            }
+          package: {
+            id: { $arrayElemAt: ['$packageDetails._id', 0] },
+            name: { $arrayElemAt: ['$packageDetails.name', 0] }
           }
         }
       }
@@ -96,7 +63,8 @@ const getPaginatedItem = async (req, res) => {
 
     res.status(200).json({ message: "Paginated items", items, totalPages });
   } catch (error) {
-    res.status(500).json({ message: "Error getting paginated items", error });
+    console.error("Error getting paginated items:", error);  // Log error details
+    res.status(500).json({ message: "Error getting paginated items", error: error.message });
   }
 };
 
