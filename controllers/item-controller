@@ -3,6 +3,7 @@ const Item  = require('../model/item')
 const ItemSubitem   = require('../model/itemSubitem')
 const packages = require('../model/packageModel')
 const { v4: uuidv4 } = require('uuid');
+const mongoose=require("mongoose")
 
 
 const addItem = async (req, res) => {
@@ -13,7 +14,9 @@ console.log(req.body);
   }
 
   try {
-    const newItem = new Item({ name, isAvailable ,packages });
+    const packageId = new mongoose.Types.ObjectId(packages);  // Correct spelling
+console.log(packageId)
+    const newItem = new Item({ name, isAvailable ,packages:packageId });
      await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
@@ -143,13 +146,14 @@ const deleteItem = async (req, res) => {
 // Update Items
 const updateitem = async (req, res) => {
   const itemId = req.params.itemId;
-  const { name, isAvailable, subItems, packages } = req.body;
-
+  const { name, isAvailable, packages } = req.body;
+console.log(packages)
   try {
     // Update the item in the Item collection
     const updatedItem = await Item.findByIdAndUpdate(
       itemId,
-      { name, isAvailable },
+     
+      { name, isAvailable, packages },
       { new: true }
     );
 
@@ -158,21 +162,15 @@ const updateitem = async (req, res) => {
     }
 
     // Remove the old subItem and package associations
-    await ItemSubitem.deleteMany({ item_id: itemId });
+    
 
     // Create new subItem and package associations
-    const subItemRecords = subItems.map(subItemId => ({
-      item_id: itemId,
-      subitem_id: subItemId,
-    }));
+     
 
-    const packageRecords = packages.map(packageId => ({
-      item_id: itemId,
-      package_id: packageId,
-    }));
+    
 
     // Save the new associations
-    await ItemSubitem.insertMany([...subItemRecords, ...packageRecords]);
+     
 
     return res.status(200).json({ message: "Item updated successfully", updatedItem });
   } catch (error) {
