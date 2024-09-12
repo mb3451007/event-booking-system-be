@@ -117,8 +117,9 @@ const getPackageById = async (req, res) => {
       return res.status(404).json({ message: 'Package not found' });
     }
 
-    const itemsData = await Item.find({ packages:packageId });
+    const itemsData = await Item.find({ packages:packageId ,isAvailable:true});
     if (!itemsData || itemsData.length === 0) {
+      
       return res.status(200).json({
         message: 'Package retrieved successfully, but no items found',
         data: { package: packageData, itemsWithSubItems: [] }
@@ -128,7 +129,7 @@ const getPackageById = async (req, res) => {
     
     const itemId = itemsData.map(item=>item._id)
   
-    const subItemsData = await Subitem.find({ items:{$in: itemId}  });
+    const subItemsData = await Subitem.find({ items:{$in: itemId},isAvailable:true  });
 
     const itemsWithSubItems = itemsData.map(item => {
    
