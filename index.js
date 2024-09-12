@@ -10,8 +10,8 @@ const flatRate = require('./routes/settingRoutes');
 const mongoose = require('mongoose');
 const loginSchema = require('./model/authModel');
 const flatRateSchema = require('./model/settingsModel');
-
-// Create an HTTP server
+const nodemailer = require('nodemailer');
+const emailRoute = require('./routes/emailRoutes');
 const server = http.createServer(app);
 const password = "qwertyuiop#51";
 
@@ -28,10 +28,10 @@ mongoose.connect("mongodb+srv://zeeshanyousaf5151:UcDox0geRm75lz3t@cluster0.4bvn
 }).then(async () => {
   console.log('Connected to MongoDB');
 
-  // Check if the admin user already exists
+ 
   const existingUser = await loginSchema.findOne({ username: 'admin' });
   if (!existingUser) {
-    // Insert the admin user document
+   
     loginSchema.create({ username: 'admin', password: '123' })
       .then(doc => {
         console.log('Admin user created:', doc);
@@ -43,10 +43,10 @@ mongoose.connect("mongodb+srv://zeeshanyousaf5151:UcDox0geRm75lz3t@cluster0.4bvn
     console.log('Admin user already exists');
   }
 
-  // Check if the flat rate data already exists
+
   const existingFlatRates = await flatRateSchema.find({ key: { $in: seedData.map(item => item.key) } });
   if (existingFlatRates.length === 0) {
-    // Insert the flat rate data
+ 
     flatRateSchema.insertMany(seedData)
       .then(docs => {
         console.log('Flat rates created:', docs);
@@ -68,6 +68,8 @@ app.use('/subItem', subItems);
 app.use('/package', peckage);
 app.use('/', auth);
 app.use('/flatrate', flatRate);
+app.use('/email', emailRoute);
+
 
 const port = 3000;
 server.listen(port, () => {
