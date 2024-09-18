@@ -17,14 +17,11 @@ const password = "qwertyuiop#51";
 
 const seedData = [
   { key: 'flatRate1', value: 100 },
-  { key: 'flatRate2', value: 200 },
-  { key: 'flatRate3', value: 300 },
-  { key: 'flatRate4', value: 400 },
+  { key: 'Min no of persons', value: 200 },
+  { key: 'Max no of persons', value: 300 },
 ];
 
 mongoose.connect("mongodb+srv://zeeshanyousaf5151:UcDox0geRm75lz3t@cluster0.4bvnb.mongodb.net/", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
 }).then(async () => {
   console.log('Connected to MongoDB');
 
