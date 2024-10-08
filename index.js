@@ -21,7 +21,7 @@ const seedData = [
   { key: 'Max no of persons', value: 300 },
 ];
 
-mongoose.connect("mongodb+srv://zeeshanyousaf5151:UcDox0geRm75lz3t@cluster0.4bvnb.mongodb.net/", {
+mongoose.connect("mongodb+srv://zeeshanyousaf5151:qRUbxjVGV9okGi7S@cluster0.4bvnb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
 }).then(async () => {
   console.log('Connected to MongoDB');
 
