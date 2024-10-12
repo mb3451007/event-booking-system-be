@@ -1,6 +1,6 @@
 const express = require('express');
 const Router =  express.Router();
-const {addSubItem, getPaginatedSubItem,deleteSubItem,updateSubitem,getAllSubItems} = require('../controllers/subItem-controller')
+const {addSubItem, getPaginatedSubItem,deleteSubItem,updateSubitem,getAllSubItems} = require('../controllers/subItem-controller.js')
 
 
 Router.post('/add-Subitem', addSubItem)

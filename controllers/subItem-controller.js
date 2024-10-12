@@ -1,6 +1,6 @@
 
-const subItem = require('../model/subItem')
-const item = require('../model/item')
+const subItem = require('../model/subItemModel.js')
+const item = require('../model/itemModel.js')
 const mongoose=require("mongoose")
 
 //  addSubItem

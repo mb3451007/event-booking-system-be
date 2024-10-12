@@ -1,4 +1,4 @@
-const flatRate = require('../model/settingsModel')
+const flatRate = require('../model/settingsModel.js')
 
 // get All Subitems
 

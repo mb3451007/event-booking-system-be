@@ -1,6 +1,6 @@
 const express = require('express');
 const Router =  express.Router();
-const {addPackage, getPaginatedPackage,deletePackage,updatePackage,getAllPackage,getPackageById} = require('../controllers/packageController')
+const {addPackage, getPaginatedPackage,deletePackage,updatePackage,getAllPackage,getPackageById} = require('../controllers/packageController.js')
 
 
 Router.post('/add-package', addPackage)

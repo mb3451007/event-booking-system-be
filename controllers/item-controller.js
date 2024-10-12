@@ -1,7 +1,6 @@
 
-const Item  = require('../model/item')
-const ItemSubitem   = require('../model/itemSubitem')
-const packages = require('../model/packageModel')
+const Item  = require('../model/itemModel.js')
+const packages = require('../model/packageModel.js')
 const { v4: uuidv4 } = require('uuid');
 const mongoose=require("mongoose")
 

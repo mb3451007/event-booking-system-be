@@ -1,8 +1,7 @@
 
-const packageSchema  = require('../model/packageModel')
-const ItemSubitem   = require('../model/itemSubitem')
-const Item = require('../model/item');
-const Subitem = require('../model/subItem');
+const packageSchema  = require('../model/packageModel.js')
+const Item = require('../model/itemModel.js');
+const Subitem = require('../model/subItemModel.js');
 const { v4: uuidv4 } = require('uuid');
 
 

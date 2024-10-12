@@ -1,5 +1,5 @@
-const loginSchema = require('../model/authModel')
-const {generateToken} = require('../auth/jwt')
+const loginSchema = require('../model/authModel.js')
+const {generateToken} = require('../auth/jwt.js');
 const bcrypt = require('bcrypt');
 const login = async (req, res) => {
     const { username, password } = req.body;
