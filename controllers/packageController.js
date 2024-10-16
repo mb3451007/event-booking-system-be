@@ -6,14 +6,14 @@ const { v4: uuidv4 } = require('uuid');
 
 
 const addPackage = async (req, res) => {
-  const { name } = req.body
+  const { name  , description} = req.body
 
-  if (!name ) {
+  if (!name || !description) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new packageSchema({ name });
+    const newItem = new packageSchema({ name , description });
     await newItem.save();
     return res.status(200).json({message:"package added succsessfully",newItem});
   }
