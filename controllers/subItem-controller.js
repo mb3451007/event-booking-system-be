@@ -5,7 +5,7 @@ const mongoose=require("mongoose")
 
 //  addSubItem
 const addSubItem = async (req, res) => {
-  const { name, price, isAvailable ,item} = req.body;
+  const { name, price, isAvailable ,isOptional,item} = req.body;
   console.log(req.body,'body//////');
   if (!name || !price || !item) {
     return res.status(400).json({ message: "Fill all required fields" });
@@ -13,7 +13,7 @@ const addSubItem = async (req, res) => {
 
   try {
      
-    const newItem = new subItem({ name, price, isAvailable,items:item });
+    const newItem = new subItem({ name, price, isAvailable ,isOptional,items:item });
     await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
@@ -48,6 +48,7 @@ const getPaginatedSubItem = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
+          isOptional: 1,
           price: 1,  
           item: {
             id: { $arrayElemAt: ['$itemDetails._id', 0] },  
@@ -100,13 +101,13 @@ const deleteSubItem = async (req, res) => {
 // Update SubItems
 const updateSubitem = async (req, res) => {
   const SubitemId = req.params.SubitemId;
-  const { name, price, isAvailable,item } = req.body;
+  const { name, price, isAvailable,isOptional,item } = req.body;
   console.log(req.body)
 
   try {
     const updatedItem = await subItem.findByIdAndUpdate(
       SubitemId,
-      { name, price, isAvailable ,items:item},
+      { name, price, isAvailable,isOptional ,items:item},
       { new: true } 
     );
 

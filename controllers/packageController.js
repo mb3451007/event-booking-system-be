@@ -6,14 +6,14 @@ const { v4: uuidv4 } = require('uuid');
 
 
 const addPackage = async (req, res) => {
-  const { name  , description} = req.body
+  const { name  , description, price} = req.body
 
-  if (!name || !description) {
+  if (!name || !description || !price) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new packageSchema({ name , description });
+    const newItem = new packageSchema({ name ,price, description });
     await newItem.save();
     return res.status(200).json({message:"package added succsessfully",newItem});
   }
@@ -85,10 +85,10 @@ const deletePackage = async (req, res) => {
 // Update Items
 const updatePackage = async (req, res) => {
   const packageId = req.params.packageId;
-  const  {name}  = req.body;
+  const  {name , price}  = req.body;
   try {
     const updatedItem = await packageSchema.findByIdAndUpdate(
-      packageId,{ name },
+      packageId,{ name , price },
       { new: true } 
     );
 
