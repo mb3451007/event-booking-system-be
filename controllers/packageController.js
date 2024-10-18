@@ -6,14 +6,14 @@ const { v4: uuidv4 } = require('uuid');
 
 
 const addPackage = async (req, res) => {
-  const { name  , description, price} = req.body
+  const { name  , description,finalNotes ,price} = req.body
 
-  if (!name || !description || !price) {
+  if (!name || !description || !price || !finalNotes ) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
-    const newItem = new packageSchema({ name ,price, description });
+    const newItem = new packageSchema({ name ,price, description ,finalNotes });
     await newItem.save();
     return res.status(200).json({message:"package added succsessfully",newItem});
   }
@@ -36,7 +36,6 @@ const getPaginatedPackage = async (req, res) => {
 
   
     const items = await packageSchema.find().skip(skip).limit(pageSize);
-    console.log(items,'these are items in paginated packages')
     const totalItems = await packageSchema.countDocuments();
 
  
@@ -145,8 +144,6 @@ const getPackageById = async (req, res) => {
       package: packageData,
       itemsWithSubItems
     };
-    console.log(packageWithItemAndSubItems,'lllllll')
-
     return res.status(200).json({ message: 'Package retrieved successfully', data: packageWithItemAndSubItems });
 
   } catch (error) {
