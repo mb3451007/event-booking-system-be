@@ -84,10 +84,10 @@ const deletePackage = async (req, res) => {
 // Update Items
 const updatePackage = async (req, res) => {
   const packageId = req.params.packageId;
-  const  {name , price}  = req.body;
+  const  {name , price , description , finalNotes}  = req.body;
   try {
     const updatedItem = await packageSchema.findByIdAndUpdate(
-      packageId,{ name , price },
+      packageId,{ name , price ,description , finalNotes },
       { new: true } 
     );
 
