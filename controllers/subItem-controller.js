@@ -1,27 +1,32 @@
-
-const subItem = require('../model/subItemModel.js')
-const item = require('../model/itemModel.js')
-const mongoose=require("mongoose")
+const subItem = require("../model/subItemModel.js");
+const item = require("../model/itemModel.js");
+const mongoose = require("mongoose");
 
 //  addSubItem
 const addSubItem = async (req, res) => {
-  const { name, price, isAvailable,item} = req.body;
-  console.log(req.body,'body//////');
+  const { name, price, isAvailable, item } = req.body;
+  console.log(req.body, "body//////");
   if (!name || !price || !item) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
-
+  const media = `/uploads/${req.file.filename}`;
   try {
-     
-    const newItem = new subItem({ name, price, isAvailable ,items:item });
+    const newItem = new subItem({
+      name,
+      price,
+      isAvailable,
+      items: item,
+      imageUrl: media,
+    });
     await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
     console.log("Error adding item:", error);
-    return res.status(500).json({ message: "Error adding item", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Error adding item", error: error.message });
   }
 };
-
 
 // get Pagnated Subitems
 
@@ -32,41 +37,43 @@ const getPaginatedSubItem = async (req, res) => {
     const subItems = await subItem.aggregate([
       {
         $lookup: {
-          from: 'items',  
-          localField: 'items',  
-          foreignField: '_id',  
-          as: 'itemDetails'
-        }
+          from: "items",
+          localField: "items",
+          foreignField: "_id",
+          as: "itemDetails",
+        },
       },
       {
-        $skip: (pageNumber - 1) * pageSize
+        $skip: (pageNumber - 1) * pageSize,
       },
       {
-        $limit: pageSize
+        $limit: pageSize,
       },
       {
         $project: {
           name: 1,
           isAvailable: 1,
-          price: 1,  
+          price: 1,
+          imageUrl: 1,
           item: {
-            id: { $arrayElemAt: ['$itemDetails._id', 0] },  
-            name: { $arrayElemAt: ['$itemDetails.name', 0] }  
-          }
-        }
-      }
+            id: { $arrayElemAt: ["$itemDetails._id", 0] },
+            name: { $arrayElemAt: ["$itemDetails.name", 0] },
+          },
+        },
+      },
     ]);
 
     const totalItems = await subItem.countDocuments();
     const totalPages = Math.ceil(totalItems / pageSize);
-
+    console.log(subItems);
     res.status(200).json({ message: "Paginated items", subItems, totalPages });
   } catch (error) {
     console.error("Error getting paginated items:", error);
-    res.status(500).json({ message: "Error getting paginated items", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error getting paginated items", error: error.message });
   }
 };
-
 
 // get All Subitems
 
@@ -87,7 +94,9 @@ const deleteSubItem = async (req, res) => {
     const deletedItem = await subItem.findByIdAndDelete(SubitemId);
 
     if (deletedItem) {
-      res.status(200).json({ message: "Item deleted successfully", deletedItem });
+      res
+        .status(200)
+        .json({ message: "Item deleted successfully", deletedItem });
     } else {
       res.status(404).json({ message: "Item not found" });
     }
@@ -96,28 +105,55 @@ const deleteSubItem = async (req, res) => {
   }
 };
 
-
 // Update SubItems
 const updateSubitem = async (req, res) => {
-  const SubitemId = req.params.SubitemId;
-  const { name, price, isAvailable,item } = req.body;
-  console.log(req.body)
+  const subItemId = req.params.SubitemId; // Correctly reference subItemId
+  const { name, price, isAvailable, item } = req.body;
+
+  console.log("here :", subItemId);
 
   try {
+    // Find the existing item
+    const existingItem = await subItem.findById(subItemId);
+    if (!existingItem) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    // Prepare updated data
+    const updatedData = {
+      name,
+      price,
+      isAvailable,
+      items: item,
+    };
+
+    // Check if a new file was uploaded
+    if (req.file) {
+      const media = `/uploads/${req.file.filename}`; // Update the image URL
+      updatedData.imageUrl = media; // Only update if a new image was uploaded
+    } else {
+      updatedData.imageUrl = existingItem.imageUrl; // Maintain the existing image URL
+    }
+
     const updatedItem = await subItem.findByIdAndUpdate(
-      SubitemId,
-      { name, price, isAvailable,items:item},
-      { new: true } 
+      subItemId,
+      updatedData,
+      { new: true }
     );
 
-    if (updatedItem) {
-     return res.status(200).json({ message: "Item updated successfully", updatedItem });
-    } else {
-     return  res.status(404).json({ message: "Item not found" });
-    }
+    return res
+      .status(200)
+      .json({ message: "Item updated successfully", updatedItem });
   } catch (error) {
-    console.log(error)
-     return res.status(500).json({ message: "Error updating item", error });
+    console.log(error);
+    return res.status(500).json({ message: "Error updating item", error });
   }
 };
-module.exports = { addSubItem, getPaginatedSubItem, deleteSubItem, updateSubitem ,getAllSubItems};
+
+module.exports = {
+  addSubItem,
+  getPaginatedSubItem,
+  deleteSubItem,
+  updateSubitem,
+  getAllSubItems,
+};

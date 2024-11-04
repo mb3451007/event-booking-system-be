@@ -1,7 +1,7 @@
-const packageSchema = require('../model/packageModel.js');
-const Item = require('../model/itemModel.js');
-const Subitem = require('../model/subItemModel.js');
-const { v4: uuidv4 } = require('uuid');
+const packageSchema = require("../model/packageModel.js");
+const Item = require("../model/itemModel.js");
+const Subitem = require("../model/subItemModel.js");
+const { v4: uuidv4 } = require("uuid");
 
 // Add Package
 const addPackage = async (req, res) => {
@@ -14,9 +14,9 @@ const addPackage = async (req, res) => {
     maxPersons,
     discount,
     discountName,
-    discountPercentage
+    discountPercentage,
   } = req.body;
-console.log(req.body);
+  console.log(req.body);
   if (!name || !description || !price || !finalNotes) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
@@ -31,11 +31,13 @@ console.log(req.body);
       maxPersons,
       discount,
       discountName: discount ? discountName : null,
-      discountPercentage: discount ? discountPercentage : null
+      discountPercentage: discount ? discountPercentage : null,
     });
 
     await newItem.save();
-    return res.status(200).json({ message: "Package added successfully", newItem });
+    return res
+      .status(200)
+      .json({ message: "Package added successfully", newItem });
   } catch (error) {
     return res.status(500).json({ message: "Error adding package", error });
   }
@@ -54,7 +56,9 @@ const getPaginatedPackage = async (req, res) => {
 
     const totalPages = Math.ceil(totalItems / pageSize);
 
-    res.status(200).json({ message: "Paginated items", items, totalPages, totalItems });
+    res
+      .status(200)
+      .json({ message: "Paginated items", items, totalPages, totalItems });
   } catch (error) {
     res.status(500).json({ message: "Error getting paginated items", error });
   }
@@ -78,7 +82,9 @@ const deletePackage = async (req, res) => {
     const deletedItem = await packageSchema.findByIdAndDelete(packageId);
 
     if (deletedItem) {
-      res.status(200).json({ message: "Package deleted successfully", deletedItem });
+      res
+        .status(200)
+        .json({ message: "Package deleted successfully", deletedItem });
     } else {
       res.status(404).json({ message: "Package not found" });
     }
@@ -99,7 +105,7 @@ const updatePackage = async (req, res) => {
     maxPersons,
     discount,
     discountName,
-    discountPercentage
+    discountPercentage,
   } = req.body;
 
   try {
@@ -113,14 +119,16 @@ const updatePackage = async (req, res) => {
         minPersons,
         maxPersons,
         discount,
-        discountName: discount ? discountName : null,
-        discountPercentage: discount ? discountPercentage : null
+        discountName: discountName,
+        discountPercentage: discountPercentage,
       },
       { new: true } // Return the updated document
     );
 
     if (updatedItem) {
-      return res.status(200).json({ message: "Package updated successfully", updatedItem });
+      return res
+        .status(200)
+        .json({ message: "Package updated successfully", updatedItem });
     } else {
       return res.status(404).json({ message: "Package not found" });
     }
@@ -137,36 +145,49 @@ const getPackageById = async (req, res) => {
     const packageData = await packageSchema.findById(packageId);
 
     if (!packageData) {
-      return res.status(404).json({ message: 'Package not found' });
+      return res.status(404).json({ message: "Package not found" });
     }
 
-    const itemsData = await Item.find({ packages: packageId, isAvailable: true });
+    const itemsData = await Item.find({
+      packages: packageId,
+      isAvailable: true,
+    });
     if (!itemsData || itemsData.length === 0) {
       return res.status(200).json({
-        message: 'Package retrieved successfully, but no items found',
-        data: { package: packageData, itemsWithSubItems: [] }
+        message: "Package retrieved successfully, but no items found",
+        data: { package: packageData, itemsWithSubItems: [] },
       });
     }
 
-    const itemId = itemsData.map(item => item._id);
-    const subItemsData = await Subitem.find({ items: { $in: itemId }, isAvailable: true });
+    const itemId = itemsData.map((item) => item._id);
+    const subItemsData = await Subitem.find({
+      items: { $in: itemId },
+      isAvailable: true,
+    });
 
-    const itemsWithSubItems = itemsData.map(item => {
-      const relatedSubItems = subItemsData.filter(sub => sub.items.equals(item._id));
+    const itemsWithSubItems = itemsData.map((item) => {
+      const relatedSubItems = subItemsData.filter((sub) =>
+        sub.items.equals(item._id)
+      );
       return {
         item,
-        subItems: relatedSubItems
+        subItems: relatedSubItems,
       };
     });
 
     const packageWithItemAndSubItems = {
       package: packageData,
-      itemsWithSubItems
+      itemsWithSubItems,
     };
 
-    return res.status(200).json({ message: 'Package retrieved successfully', data: packageWithItemAndSubItems });
+    return res
+      .status(200)
+      .json({
+        message: "Package retrieved successfully",
+        data: packageWithItemAndSubItems,
+      });
   } catch (error) {
-    return res.status(500).json({ message: 'Error retrieving package', error });
+    return res.status(500).json({ message: "Error retrieving package", error });
   }
 };
 
@@ -176,5 +197,5 @@ module.exports = {
   deletePackage,
   updatePackage,
   getAllPackage,
-  getPackageById
+  getPackageById,
 };
