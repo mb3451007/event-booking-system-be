@@ -9,7 +9,7 @@ const addSubItem = async (req, res) => {
   if (!name || !price || !item) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
-  const media = `/uploads/${req.file.filename}`;
+  const media = req.file ? `/uploads/${req.file.filename}` : null;
   try {
     const newItem = new subItem({
       name,

@@ -5,6 +5,6 @@ const SubItemSchema = new mongoose.Schema({
   price: { type: Number, required: true, min: 0 },
   isAvailable: { type: Boolean },
   items: mongoose.Schema.Types.ObjectId,
-  imageUrl: { type: String, required: true },
+  imageUrl: { type: String, default: null },
 });
 module.exports = mongoose.model("subItem", SubItemSchema);
