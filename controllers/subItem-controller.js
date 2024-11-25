@@ -44,6 +44,9 @@ const getPaginatedSubItem = async (req, res) => {
         },
       },
       {
+        $sort: { _id: -1 }, // Sort by _id field in descending order (latest first)
+      },
+      {
         $skip: (pageNumber - 1) * pageSize,
       },
       {
