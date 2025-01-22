@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 const http = require("http");
 const items = require("./routes/itemsRoutes.js");
+const bookings = require("./routes/bookingsRoutes.js");
 const peckage = require("./routes/packageRoutes.js");
 const subItems = require("./routes/subItemsRoutes.js");
 const auth = require("./routes/authRoutes.js");
@@ -30,14 +31,17 @@ const seedData = [
   { key: "Max no of persons", value: 300 },
 ];
 
-mongoose
-  .connect("mongodb://localhost:27017/events", {})
-  .then(async () => {
+// mongoose
+//   .connect("mongodb://localhost:27017/events", {})
+mongoose.connect("mongodb+srv://zeeshanyousaf5151:qRUbxjVGV9okGi7S@cluster0.4bvnb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+}).then(async () => {
+  // console.log('Connected to MongoDB');
+  // .then(async () => {
     console.log("Connected to MongoDB");
 
     const existingUser = await loginSchema.findOne({ username: "admin" });
     if (!existingUser) {
-      const hashedPassword = await bcrypt.hash("admin123", 10);
+      const hashedPassword = await bcrypt.hash("123", 10);
       loginSchema
         .create({ username: "admin", password: hashedPassword })
         .then((doc) => {
@@ -80,6 +84,7 @@ app.use(
 app.use(express.json());
 
 app.use("/item", items);
+app.use("/booking", bookings);
 app.use("/subItem", subItems);
 app.use("/package", peckage);
 app.use("/", auth);
