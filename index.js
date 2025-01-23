@@ -31,12 +31,18 @@ const seedData = [
   { key: "Max no of persons", value: 300 },
 ];
 
+<<<<<<< HEAD
 // mongoose
 //   .connect("mongodb://localhost:27017/events", {})
 mongoose.connect("mongodb+srv://zeeshanyousaf5151:qRUbxjVGV9okGi7S@cluster0.4bvnb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
 }).then(async () => {
   // console.log('Connected to MongoDB');
   // .then(async () => {
+=======
+mongoose
+  .connect("mongodb+srv://zeeshanyousaf5151:qRUbxjVGV9okGi7S@cluster0.4bvnb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {})
+  .then(async () => {
+>>>>>>> 04af2ab (Bookings Features)
     console.log("Connected to MongoDB");
 
     const existingUser = await loginSchema.findOne({ username: "admin" });

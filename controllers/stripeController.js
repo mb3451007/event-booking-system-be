@@ -5,6 +5,7 @@ const Booking = require("../model/bookingModel.js");
 const createPaymentIntent = async (req, res) => {
   try {
     const { amount, currency, userId } = req.body;
+    console.log('amount', amount)
 
     // Create a PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
