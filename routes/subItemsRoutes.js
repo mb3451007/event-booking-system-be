@@ -6,6 +6,7 @@ const {
   deleteSubItem,
   updateSubitem,
   getAllSubItems,
+  getSubItemsByBookingId
 } = require("../controllers/subItem-controller.js");
 const upload = require("../middleware/upload.js");
 

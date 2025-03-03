@@ -14,12 +14,12 @@ const transporter = nodemailer.createTransport({
 });
 
 router.post('/send', (req, res) => {
-    const { to, subject, text, html } = req.body;
+    const { to, subject, html } = req.body;
     const mailOptions = {
         from: process.env.EMAIL_USER,  
         to,
         subject,
-        text,
+        // text,
         html
     };
     transporter.sendMail(mailOptions, (err, info) => {

@@ -6,6 +6,7 @@ const items = require("./routes/itemsRoutes.js");
 const bookings = require("./routes/bookingsRoutes.js");
 const peckage = require("./routes/packageRoutes.js");
 const subItems = require("./routes/subItemsRoutes.js");
+const bookingItems = require("./routes/bookingItemsRoutes.js");
 const auth = require("./routes/authRoutes.js");
 const flatRate = require("./routes/settingRoutes.js");
 const mongoose = require("mongoose");
@@ -74,7 +75,7 @@ mongoose.connect("mongodb+srv://zeeshanyousaf5151:qRUbxjVGV9okGi7S@cluster0.4bvn
     console.error("Error connecting to MongoDB:", err);
   });
 
-app.use(cors());
+  app.use(cors({ origin: "*" }));
 app.use(
   "/webhook",
   bodyParser.raw({ type: "application/json" }),
@@ -90,6 +91,7 @@ app.use("/package", peckage);
 app.use("/", auth);
 app.use("/flatrate", flatRate);
 app.use("/email", emailRoute);
+app.use("/bookingItems", bookingItems);
 
 // Stripe payment routes
 app.use("/payment/create-payment-intent", createPaymentIntent);

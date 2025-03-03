@@ -2,25 +2,82 @@
 const booking  = require('../model/bookingsModel.js')
 const packages = require('../model/packageModel.js')
 const { v4: uuidv4 } = require('uuid');
-const mongoose=require("mongoose")
+const mongoose=require("mongoose");
+const Booking = require('../model/bookingModel.js');
+const BookingItem = require('../model/bookingItemsModel.js');
 
 
 const addBooking = async (req, res) => {
-  const { name,email,number, price, fromDate , toDate } = req.body;
-console.log(req.body);
-  if (!name  || !email || !number || !price || !fromDate || !toDate) {
-    return res.status(400).json({ message: "Fill all required fields" });
-  }
-
+  const { name,email,phone, fromDate , toDate, packageId, totalPrice, userId, noOfPersons, status, subItems } = req.body;
+  
   try {
-    const newItem = new booking({ name,email,number, price ,toDate , fromDate});
-     await newItem.save();
+    const booking=await saveBooking(userId, packageId, name, email, phone, noOfPersons, fromDate, toDate, totalPrice, status);
+    
+    if(booking){
+      for (const subItem of subItems) {
+        const subitem = await saveBookingItem(booking.id, subItem._id, subItem.name, subItem.quantity, subItem.price);
+      }
+    }
+
     return res.status(201).json({ message: "booking added successfully" });
   } catch (error) {
     console.log("Error adding item:", error);
     return res.status(500).json({ message: "Error adding booking", error: error.message });
   }
 };
+
+
+async function saveBookingItem(bookingId, itemId, itemName, quantity, price) {
+  try {
+    // Save booking data to MongoDB
+    const newBooking = new BookingItem({
+      bookingId: bookingId,
+      itemId: itemId,
+      itemName: itemName,
+      quantity: quantity,
+      price: price
+    });
+
+    const savedBooking = await newBooking.save();
+    console.log("subitem saved successfully:", savedBooking);
+
+    return { id: savedBooking._id };
+  } catch (error) {
+    console.error("Error saving item:", error);
+    throw error;  // Handle or propagate the error
+  }
+}
+
+async function saveBooking(userId, packageId, name, email, phone, noOfPersons, fromDate, toDate, totalPrice, status) {
+  try {
+    console.log('fromDae', new Date(fromDate).getTime())
+    console.log('toDae', new Date(toDate).getTime())
+    const newBooking = new Booking({
+      user: userId, // Assuming the schema has a 'user' field
+      packageId: packageId,
+      name: name,
+      phone: phone,
+      email: email,
+      noOfPersons: noOfPersons,
+      fromDate: new Date(fromDate).getTime(),
+      toDate: new Date(toDate).getTime(),
+      totalPrice: totalPrice,
+      status: status,
+      created_at: new Date(),
+    });
+
+    console.log('booking to be saved', newBooking)
+
+    const savedBooking = await newBooking.save();
+    console.log("Booking saved successfully:", savedBooking); // Logs the saved booking
+
+    // Return the saved booking object for further use
+    return { id: savedBooking._id, savedBooking };
+  } catch (error) {
+    console.error("Error saving booking:", error);
+    throw error;  // Handle or propagate the error
+  }
+}
 
 
 
@@ -82,18 +139,57 @@ const deleteBooking = async (req, res) => {
 
 
 // Update Items
-const updateBooking = async (req, res) => {
+
+const updateBooking = async (req, res) => { console.log('here')
   const itemId = req.params.itemId;
-  const { name,email,number, price,toDate , fromDate } = req.body;
-console.log(packages)
+  const { name,email,phone, fromDate , toDate, packageId, totalPrice, userId, noOfPersons, status, subItems } = req.body;
+  console.log('name', name)
+  console.log('email', email)
+  console.log('phone', phone)
+  console.log('fromDate', fromDate)
+  console.log('toDate', toDate)
+  console.log('ackageId',packageId)
+  console.log('totalPrice', totalPrice)
+  console.log('userId', userId)
+  console.log('noOfPersons', noOfPersons)
+  console.log('status', status)
+
+  console.log("Received fromDate:", fromDate, "-> Parsed:", new Date(fromDate));
+console.log("Received toDate:", toDate, "-> Parsed:", new Date(toDate));
+
   try {
-    // Update the item in the Item collection
-    const updatedItem = await booking.findByIdAndUpdate(
+
+    const updatedItem = await Booking.findByIdAndUpdate(
       itemId,
-     
-      { name, email ,number, price, toDate,fromDate },
-      { new: true }
+      {
+        user: userId,
+        packageId: packageId,
+        name: name,
+        phone: phone,
+        email: email,
+        noOfPersons: noOfPersons,
+        fromDate: new Date(fromDate),
+        toDate: new Date(toDate),
+        totalPrice: totalPrice,
+        status: status,
+        updated_at: new Date() 
+      },
+      { new: true } // This option returns the updated document
     );
+
+    subItems.forEach(async (item) => {
+      try {
+        // Assuming you have a model named 'SubItemModel' to store individual items
+        await BookingItem.updateOne(
+          { _id: item._id }, // assuming each item has a unique identifier
+          { $set: item }, // update with the new data
+        );
+      } catch (error) {
+        console.error('Error updating item:', error);
+      }
+    });
+
+    console.log('updatedSubitem', subItems)
 
     if (!updatedItem) {
       return res.status(404).json({ message: "Item not found" });
