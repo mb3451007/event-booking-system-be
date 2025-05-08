@@ -6,16 +6,17 @@ const mongoose=require("mongoose")
 
 
 const addItem = async (req, res) => {
-  const { name, isAvailable, packages } = req.body;
-console.log(req.body);
-  if (!name  || !packages || packages.length === 0) {
+  console.log('hereee')
+  const { name, isAvailable, packages,max_quantity } = req.body;
+console.log(req.body,'this is body');
+  if (!name  || !packages || packages.length === 0 || !max_quantity) {
     return res.status(400).json({ message: "Fill all required fields" });
   }
 
   try {
     const packageId = new mongoose.Types.ObjectId(packages);  // Correct spelling
 console.log(packageId)
-    const newItem = new Item({ name, isAvailable ,packages:packageId });
+    const newItem = new Item({ name, isAvailable ,packages:packageId ,max_quantity });
      await newItem.save();
     return res.status(201).json({ message: "Item added successfully" });
   } catch (error) {
@@ -52,6 +53,7 @@ const getPaginatedItem = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
+          max_quantity: { $ifNull: ["$max_quantity", 1] },
           package: {
             id: { $arrayElemAt: ['$packageDetails._id', 0] },
             name: { $arrayElemAt: ['$packageDetails.name', 0] }
@@ -98,6 +100,7 @@ const getAllItems = async (req, res) => {
         $project: {
           name: 1,
           isAvailable: 1,
+          max_quantity: 1,
           subItems: '$subItemsAndPackages.subitem_id',
           packages: {
             $map: {
@@ -145,14 +148,14 @@ const deleteItem = async (req, res) => {
 // Update Items
 const updateitem = async (req, res) => {
   const itemId = req.params.itemId;
-  const { name, isAvailable, packages } = req.body;
+  const { name, isAvailable, packages ,max_quantity } = req.body;
 console.log(packages)
   try {
     // Update the item in the Item collection
     const updatedItem = await Item.findByIdAndUpdate(
       itemId,
      
-      { name, isAvailable, packages },
+      { name, isAvailable, packages ,max_quantity },
       { new: true }
     );
 
