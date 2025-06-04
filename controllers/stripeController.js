@@ -35,8 +35,10 @@ const createPaymentIntent = async (req, res) => {
       metadata: { 
         packageName,
         bookingId: booking.id.toString()
-       },
+       }  
     });
+
+    console.log('aftr webhook')
 
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,
@@ -112,12 +114,15 @@ function formatTime(timestamp) {
 
 const stripeWebhook = async (req, res) => {
   console.log("Here");
+  console.log("req.body type:", typeof req.body);
+console.log("req.body raw buffer:", req.body);
+
   const sig = req.headers["stripe-signature"];
   console.log('sig', sig)
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret, 600);
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret, 1000);
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook error: ${err.message}`);

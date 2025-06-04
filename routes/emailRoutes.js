@@ -22,10 +22,12 @@ router.post('/send', (req, res) => {
         // text,
         html
     };
+    console.log('Sending email to:', mailOptions);
     transporter.sendMail(mailOptions, (err, info) => {
         if (err) {
             return res.status(500).json({ error: 'Error occurred', details: err });
         }
+        console.log('email sent')
         res.status(200).json({ message: 'Email sent', response: info.response });
     });
 });
